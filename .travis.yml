@@ -7,11 +7,14 @@ services:
   - mysql
   - postgresql
 
-# create test database
 before_install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+
+# create test database
+before_script:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS sqlxtest;'
   - psql -c 'create database sqlxtest;' -U postgres
-  - go get github.com/mattn/goveralls
   - export SQLX_MYSQL_DSN="travis:@/sqlxtest?parseTime=true"
   - export SQLX_POSTGRES_DSN="postgres://postgres:@localhost/sqlxtest?sslmode=disable"
   - export SQLX_SQLITE_DSN="$HOME/sqlxtest.db"
@@ -27,4 +30,5 @@ go:
 
 # run tests w/ coverage
 script:
-  - travis_retry $GOPATH/bin/goveralls -service=travis-ci
+  - go test -v -covermode=count -coverprofile=coverage.out
+  - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
