@@ -315,7 +315,7 @@ func TestFieldsEmbedded(t *testing.T) {
 
 	fi = fields.GetByPath("person.name")
 	if fi == nil {
-		t.Errorf("Expecting person.name to exist")
+		t.Fatal("Expecting person.name to exist")
 	}
 	if fi.Path != "person.name" {
 		t.Errorf("Expecting %s, got %s", "person.name", fi.Path)
@@ -326,7 +326,7 @@ func TestFieldsEmbedded(t *testing.T) {
 
 	fi = fields.GetByTraversal([]int{1, 0})
 	if fi == nil {
-		t.Errorf("Expecting traveral to exist")
+		t.Fatal("Expecting traveral to exist")
 	}
 	if fi.Path != "name" {
 		t.Errorf("Expecting %s, got %s", "name", fi.Path)
@@ -334,7 +334,7 @@ func TestFieldsEmbedded(t *testing.T) {
 
 	fi = fields.GetByTraversal([]int{2})
 	if fi == nil {
-		t.Errorf("Expecting traversal to exist")
+		t.Fatal("Expecting traversal to exist")
 	}
 	if _, ok := fi.Options["required"]; !ok {
 		t.Errorf("Expecting required option to be set")
@@ -618,6 +618,7 @@ func TestMapperMethodsByName(t *testing.T) {
 			B2: "7",
 		},
 		A2: 8,
+		a3: 3,
 	}
 
 	testCases := []struct {
@@ -811,8 +812,8 @@ func TestMustBe(t *testing.T) {
 				t.Error("expected panic with *reflect.ValueError")
 				return
 			}
-			if valueErr.Method != "github.com/jmoiron/sqlx/reflectx.TestMustBe" {
-			}
+			// if valueErr.Method != "github.com/Blank-Xu/sqlx/reflectx.TestMustBe" {
+			// }
 			if valueErr.Kind != reflect.String {
 				t.Errorf("unexpected Kind: %s", valueErr.Kind)
 			}

@@ -2,17 +2,15 @@ package sqlx
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"errors"
 	"fmt"
-
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 
-	"github.com/jmoiron/sqlx/reflectx"
+	"github.com/Blank-Xu/sqlx/reflectx"
 )
 
 // Although the NameMapper is convenient, in practice it should not
@@ -65,10 +63,7 @@ func isScannable(t reflect.Type) bool {
 	// it's not important that we use the right mapper for this particular object,
 	// we're only concerned on how many exported fields this struct has
 	m := mapper()
-	if len(m.TypeMap(t).Index) == 0 {
-		return true
-	}
-	return false
+	return len(m.TypeMap(t).Index) == 0
 }
 
 // ColScanner is an interface used by MapScan and SliceScan
@@ -164,7 +159,6 @@ func mapperFor(i interface{}) *reflectx.Mapper {
 }
 
 var _scannerInterface = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
-var _valuerInterface = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
 
 // Row is a reimplementation of sql.Row in order to gain access to the underlying
 // sql.Rows.Columns() data, necessary for StructScan.
@@ -937,9 +931,9 @@ func scanAll(rows rowsi, dest interface{}, structOnly bool) error {
 		var values []interface{}
 		var m *reflectx.Mapper
 
-		switch rows.(type) {
+		switch r := rows.(type) {
 		case *Rows:
-			m = rows.(*Rows).Mapper
+			m = r.Mapper
 		default:
 			m = mapper()
 		}

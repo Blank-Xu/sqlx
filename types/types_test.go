@@ -28,20 +28,20 @@ func TestJSONText(t *testing.T) {
 		t.Errorf("Was not expecting an error")
 	}
 	m := map[string]interface{}{}
-	j.Unmarshal(&m)
+	_ = j.Unmarshal(&m)
 
 	if m["foo"].(float64) != 1 || m["bar"].(float64) != 2 {
 		t.Errorf("Expected valid json but got some garbage instead? %#v", m)
 	}
 
 	j = JSONText(`{"foo": 1, invalid, false}`)
-	v, err = j.Value()
+	_, err = j.Value()
 	if err == nil {
 		t.Errorf("Was expecting invalid json to fail!")
 	}
 
 	j = JSONText("")
-	v, err = j.Value()
+	_, err = j.Value()
 	if err != nil {
 		t.Errorf("Was not expecting an error")
 	}
@@ -78,7 +78,7 @@ func TestNullJSONText(t *testing.T) {
 		t.Errorf("Was not expecting an error")
 	}
 	m := map[string]interface{}{}
-	j.Unmarshal(&m)
+	_ = j.Unmarshal(&m)
 
 	if m["foo"].(float64) != 1 || m["bar"].(float64) != 2 {
 		t.Errorf("Expected valid json but got some garbage instead? %#v", m)

@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Blank-Xu/sqlx/reflectx"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx/reflectx"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -80,7 +80,7 @@ func loadDefaultFixtureContext(ctx context.Context, db *DB, t *testing.T) {
 	tx.MustExecContext(ctx, tx.Rebind("INSERT INTO employees (name, id) VALUES (?, ?)"), "Peter", "4444")
 	tx.MustExecContext(ctx, tx.Rebind("INSERT INTO employees (name, id, boss_id) VALUES (?, ?, ?)"), "Joe", "1", "4444")
 	tx.MustExecContext(ctx, tx.Rebind("INSERT INTO employees (name, id, boss_id) VALUES (?, ?, ?)"), "Martin", "2", "4444")
-	tx.Commit()
+	_ = tx.Commit()
 }
 
 // Test a new backwards compatible feature, that missing scan destinations
@@ -664,7 +664,7 @@ func TestNilInsertsContext(t *testing.T) {
 		r := db.Rebind
 
 		db.MustExecContext(ctx, r(`INSERT INTO tt (id) VALUES (1)`))
-		db.GetContext(ctx, &v, r(`SELECT * FROM tt`))
+		_ = db.GetContext(ctx, &v, r(`SELECT * FROM tt`))
 		if v.ID != 1 {
 			t.Errorf("Expecting id of 1, got %v", v.ID)
 		}
@@ -678,9 +678,9 @@ func TestNilInsertsContext(t *testing.T) {
 		// as reflectx.FieldByIndexes attempts to allocate nil pointer receivers for
 		// writing.  This was fixed by creating & using the reflectx.FieldByIndexesReadOnly
 		// function.  This next line is important as it provides the only coverage for this.
-		db.NamedExecContext(ctx, `INSERT INTO tt (id, value) VALUES (:id, :value)`, v)
+		_, _ = db.NamedExecContext(ctx, `INSERT INTO tt (id, value) VALUES (:id, :value)`, v)
 
-		db.GetContext(ctx, &v2, r(`SELECT * FROM tt WHERE id=2`))
+		_ = db.GetContext(ctx, &v2, r(`SELECT * FROM tt WHERE id=2`))
 		if v.ID != v2.ID {
 			t.Errorf("%v != %v", v.ID, v2.ID)
 		}
@@ -784,9 +784,9 @@ func TestUsageContext(t *testing.T) {
 		jason = Person{}
 
 		row := stmt1.QueryRowx("DoesNotExist")
-		row.Scan(&jason)
+		_ = row.Scan(&jason)
 		row = stmt1.QueryRowx("DoesNotExist")
-		row.Scan(&jason)
+		_ = row.Scan(&jason)
 
 		err = stmt1.GetContext(ctx, &jason, "DoesNotExist User")
 		if err == nil {
@@ -812,7 +812,7 @@ func TestUsageContext(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		tx.Commit()
+		_ = tx.Commit()
 
 		places := []*Place{}
 		err = db.SelectContext(ctx, &places, "SELECT telcode FROM place ORDER BY telcode ASC")
@@ -1355,10 +1355,10 @@ func TestConn(t *testing.T) {
 
 	RunWithSchemaContext(context.Background(), schema, t, func(ctx context.Context, db *DB, t *testing.T) {
 		conn, err := db.Connx(ctx)
-		defer conn.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer conn.Close()
 
 		_, err = conn.ExecContext(ctx, conn.Rebind(`INSERT INTO tt_conn (id, value) VALUES (?, ?), (?, ?)`), 1, "a", 2, "b")
 		if err != nil {
@@ -1406,7 +1406,7 @@ func TestConn(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		tx.Commit()
+		_ = tx.Commit()
 		if v1.ID != 1 {
 			t.Errorf("Expecting to get back 1, but got %v\n", v1.ID)
 		}

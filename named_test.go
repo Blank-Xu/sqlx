@@ -126,12 +126,12 @@ func TestNamedQueries(t *testing.T) {
 		var err error
 
 		// Check that invalid preparations fail
-		ns, err = db.PrepareNamed("SELECT * FROM person WHERE first_name=:first:name")
+		_, err = db.PrepareNamed("SELECT * FROM person WHERE first_name=:first:name")
 		if err == nil {
 			t.Error("Expected an error with invalid prepared statement.")
 		}
 
-		ns, err = db.PrepareNamed("invalid sql")
+		_, err = db.PrepareNamed("invalid sql")
 		if err == nil {
 			t.Error("Expected an error with invalid prepared statement.")
 		}
@@ -154,7 +154,7 @@ func TestNamedQueries(t *testing.T) {
 		test.Error(err)
 		for rows.Next() {
 			var p2 Person
-			rows.StructScan(&p2)
+			_ = rows.StructScan(&p2)
 			if p.FirstName != p2.FirstName {
 				t.Errorf("got %s, expected %s", p.FirstName, p2.FirstName)
 			}
@@ -220,7 +220,7 @@ func TestNamedQueries(t *testing.T) {
 
 		// Make sure we can pull him out again
 		p2 := Person{}
-		db.Get(&p2, db.Rebind("SELECT * FROM person WHERE email=?"), js.Email)
+		_ = db.Get(&p2, db.Rebind("SELECT * FROM person WHERE email=?"), js.Email)
 		if p2.Email != js.Email {
 			t.Errorf("expected %s, got %s", js.Email, p2.Email)
 		}
@@ -239,7 +239,7 @@ func TestNamedQueries(t *testing.T) {
 		_, err = txns.Exec(sl)
 		test.Error(err)
 		// then rollback...
-		tx.Rollback()
+		_ = tx.Rollback()
 		// looking for Steven after a rollback should fail
 		err = db.Get(&p2, db.Rebind("SELECT * FROM person WHERE email=?"), sl.Email)
 		if err != sql.ErrNoRows {
@@ -251,7 +251,7 @@ func TestNamedQueries(t *testing.T) {
 		txns = tx.NamedStmt(ns)
 		_, err = txns.Exec(sl)
 		test.Error(err)
-		tx.Commit()
+		_ = tx.Commit()
 
 		// looking for Steven after a Commit should succeed
 		err = db.Get(&p2, db.Rebind("SELECT * FROM person WHERE email=?"), sl.Email)

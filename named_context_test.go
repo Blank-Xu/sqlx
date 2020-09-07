@@ -18,12 +18,12 @@ func TestNamedContextQueries(t *testing.T) {
 		ctx := context.Background()
 
 		// Check that invalid preparations fail
-		ns, err = db.PrepareNamedContext(ctx, "SELECT * FROM person WHERE first_name=:first:name")
+		_, err = db.PrepareNamedContext(ctx, "SELECT * FROM person WHERE first_name=:first:name")
 		if err == nil {
 			t.Error("Expected an error with invalid prepared statement.")
 		}
 
-		ns, err = db.PrepareNamedContext(ctx, "invalid sql")
+		_, err = db.PrepareNamedContext(ctx, "invalid sql")
 		if err == nil {
 			t.Error("Expected an error with invalid prepared statement.")
 		}
@@ -46,7 +46,7 @@ func TestNamedContextQueries(t *testing.T) {
 		test.Error(err)
 		for rows.Next() {
 			var p2 Person
-			rows.StructScan(&p2)
+			_ = rows.StructScan(&p2)
 			if p.FirstName != p2.FirstName {
 				t.Errorf("got %s, expected %s", p.FirstName, p2.FirstName)
 			}
@@ -92,7 +92,7 @@ func TestNamedContextQueries(t *testing.T) {
 
 		// Make sure we can pull him out again
 		p2 := Person{}
-		db.GetContext(ctx, &p2, db.Rebind("SELECT * FROM person WHERE email=?"), js.Email)
+		_ = db.GetContext(ctx, &p2, db.Rebind("SELECT * FROM person WHERE email=?"), js.Email)
 		if p2.Email != js.Email {
 			t.Errorf("expected %s, got %s", js.Email, p2.Email)
 		}
@@ -111,7 +111,7 @@ func TestNamedContextQueries(t *testing.T) {
 		_, err = txns.ExecContext(ctx, sl)
 		test.Error(err)
 		// then rollback...
-		tx.Rollback()
+		_ = tx.Rollback()
 		// looking for Steven after a rollback should fail
 		err = db.GetContext(ctx, &p2, db.Rebind("SELECT * FROM person WHERE email=?"), sl.Email)
 		if err != sql.ErrNoRows {
@@ -123,7 +123,7 @@ func TestNamedContextQueries(t *testing.T) {
 		txns = tx.NamedStmtContext(ctx, ns)
 		_, err = txns.ExecContext(ctx, sl)
 		test.Error(err)
-		tx.Commit()
+		_ = tx.Commit()
 
 		// looking for Steven after a Commit should succeed
 		err = db.GetContext(ctx, &p2, db.Rebind("SELECT * FROM person WHERE email=?"), sl.Email)

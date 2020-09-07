@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-
 	"io/ioutil"
 )
 
@@ -20,8 +19,8 @@ func (g GzippedText) Value() (driver.Value, error) {
 	b := make([]byte, 0, len(g))
 	buf := bytes.NewBuffer(b)
 	w := gzip.NewWriter(buf)
-	w.Write(g)
-	w.Close()
+	_, _ = w.Write(g)
+	_ = w.Close()
 	return buf.Bytes(), nil
 
 }

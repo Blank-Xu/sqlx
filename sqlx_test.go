@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Blank-Xu/sqlx/reflectx"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx/reflectx"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -41,7 +41,6 @@ var TestMysql = true
 var sldb *DB
 var pgdb *DB
 var mysqldb *DB
-var active = []*DB{}
 
 func init() {
 	ConnectAll()
@@ -160,12 +159,6 @@ type Person struct {
 	AddedAt   time.Time `db:"added_at"`
 }
 
-type Person2 struct {
-	FirstName sql.NullString `db:"first_name"`
-	LastName  sql.NullString `db:"last_name"`
-	Email     sql.NullString
-}
-
 type Place struct {
 	Country string
 	City    sql.NullString
@@ -257,7 +250,7 @@ func loadDefaultFixture(db *DB, t *testing.T) {
 	tx.MustExec(tx.Rebind("INSERT INTO employees (name, id) VALUES (?, ?)"), "Peter", "4444")
 	tx.MustExec(tx.Rebind("INSERT INTO employees (name, id, boss_id) VALUES (?, ?, ?)"), "Joe", "1", "4444")
 	tx.MustExec(tx.Rebind("INSERT INTO employees (name, id, boss_id) VALUES (?, ?, ?)"), "Martin", "2", "4444")
-	tx.Commit()
+	_ = tx.Commit()
 }
 
 // Test a new backwards compatible feature, that missing scan destinations
@@ -838,7 +831,7 @@ func TestNilInserts(t *testing.T) {
 		r := db.Rebind
 
 		db.MustExec(r(`INSERT INTO tt (id) VALUES (1)`))
-		db.Get(&v, r(`SELECT * FROM tt`))
+		_ = db.Get(&v, r(`SELECT * FROM tt`))
 		if v.ID != 1 {
 			t.Errorf("Expecting id of 1, got %v", v.ID)
 		}
@@ -852,9 +845,9 @@ func TestNilInserts(t *testing.T) {
 		// as reflectx.FieldByIndexes attempts to allocate nil pointer receivers for
 		// writing.  This was fixed by creating & using the reflectx.FieldByIndexesReadOnly
 		// function.  This next line is important as it provides the only coverage for this.
-		db.NamedExec(`INSERT INTO tt (id, value) VALUES (:id, :value)`, v)
+		_, _ = db.NamedExec(`INSERT INTO tt (id, value) VALUES (:id, :value)`, v)
 
-		db.Get(&v2, r(`SELECT * FROM tt WHERE id=2`))
+		_ = db.Get(&v2, r(`SELECT * FROM tt WHERE id=2`))
 		if v.ID != v2.ID {
 			t.Errorf("%v != %v", v.ID, v2.ID)
 		}
@@ -958,9 +951,9 @@ func TestUsage(t *testing.T) {
 		jason = Person{}
 
 		row := stmt1.QueryRowx("DoesNotExist")
-		row.Scan(&jason)
+		_ = row.Scan(&jason)
 		row = stmt1.QueryRowx("DoesNotExist")
-		row.Scan(&jason)
+		_ = row.Scan(&jason)
 
 		err = stmt1.Get(&jason, "DoesNotExist User")
 		if err == nil {
@@ -986,7 +979,7 @@ func TestUsage(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		tx.Commit()
+		_ = tx.Commit()
 
 		places := []*Place{}
 		err = db.Select(&places, "SELECT telcode FROM place ORDER BY telcode ASC")
@@ -1287,10 +1280,6 @@ func TestUsage(t *testing.T) {
 			}
 		}
 	})
-}
-
-type Product struct {
-	ProductID int
 }
 
 // tests that sqlx will not panic when the wrong driver is passed because
@@ -1734,7 +1723,7 @@ func BenchmarkBindStruct(b *testing.B) {
 	am := t{"Jason Moiron", 30, "Jason", "Moiron"}
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		bindStruct(DOLLAR, q1, am, mapper())
+		_, _, _ = bindStruct(DOLLAR, q1, am, mapper())
 	}
 }
 
@@ -1749,7 +1738,7 @@ func BenchmarkBindMap(b *testing.B) {
 	}
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		bindMap(DOLLAR, q1, am)
+		_, _, _ = bindMap(DOLLAR, q1, am)
 	}
 }
 
